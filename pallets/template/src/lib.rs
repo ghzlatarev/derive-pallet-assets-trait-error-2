@@ -22,7 +22,7 @@ pub mod pallet {
 
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
-	pub trait Config: frame_system::Config {
+	pub trait Config: frame_system::Config + pallet_assets::Config {
 		/// Because this pallet emits events, it depends on the runtime's definition of an event.
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 	}
@@ -73,8 +73,11 @@ pub mod pallet {
 			// https://substrate.dev/docs/en/knowledgebase/runtime/origin
 			let who = ensure_signed(origin)?;
 
-			// Update storage.
-			<Something<T>>::put(something);
+			// Query pallet-assets storage.
+            let total_supply = <pallet_assets::Pallet<T>>::total_supply(
+                <T as pallet_assets::Config>::AssetId::from(0u32),
+            );
+
 
 			// Emit an event.
 			Self::deposit_event(Event::SomethingStored(something, who));
