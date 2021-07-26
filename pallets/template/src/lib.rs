@@ -1,5 +1,10 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
+//use crate::Inspect;
+//use frame_support::traits::fungible::Inspect;
+//use frame_support::traits::fungibles::Inspect;
+//use frame_support::traits::tokens::fungibles::Inspect;
+
 /// Edit this file to define custom logic or remove it if it is not needed.
 /// Learn more about FRAME and the core library of Substrate FRAME pallets:
 /// <https://substrate.dev/docs/en/knowledgebase/runtime/frame>
@@ -16,14 +21,24 @@ mod benchmarking;
 
 #[frame_support::pallet]
 pub mod pallet {
-    use frame_support::{dispatch::DispatchResult, pallet_prelude::*};
+
+    use frame_support::{
+        dispatch::DispatchResult,
+        pallet_prelude::*,
+        traits::{
+            fungibles::{Inspect, Mutate},
+            ReservableCurrency,
+        },
+    };
     use frame_system::pallet_prelude::*;
 
     /// Configure the pallet by specifying the parameters and types on which it depends.
     #[pallet::config]
-    pub trait Config: frame_system::Config + pallet_assets::Config {
+    pub trait Config: frame_system::Config {
         /// Because this pallet emits events, it depends on the runtime's definition of an event.
         type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
+        type AssetIdTest: Inspect<Self::AccountId> + Mutate<Self::AccountId>;
+        //type AssetIdTest: ReservableCurrency<Self::AccountId>;
     }
 
     #[pallet::pallet]
@@ -69,9 +84,9 @@ pub mod pallet {
         pub fn do_something(
             origin: OriginFor<T>,
             something: u32,
-            asset_id: <T as pallet_assets::Config>::AssetId,
-            account_id: T::AccountId,
-            balance: T::Balance,
+            //asset_id: T::AssetId,
+            //account_id: T::AccountId,
+            // balance: T::Balance,
         ) -> DispatchResult {
             // Check that the extrinsic was signed and get the signer.
             // This function will return an error if the extrinsic is not signed.
@@ -79,12 +94,15 @@ pub mod pallet {
             let who = ensure_signed(origin)?;
 
             // Query pallet-assets storage.
-            let total_supply = <pallet_assets::Pallet<T>>::total_supply(asset_id);
+            //let total_supply = <pallet_assets::Pallet<T>>::total_supply(asset_id);
 
             // But I also kinda of want to access pub(super) functions to modify storage like
             // But it is private :(
-            <pallet_assets::Pallet<T>>::do_mint(asset_id, &account_id, balance, None);
+            //<pallet_assets::Pallet<T>>::do_mint(asset_id, &account_id, balance, None);
 
+            T::AssetIdTest::can_withdraw(asset_id, &account_id, balance);
+            //T::AssetIdTest::reserve(asset_id);
+            T::AssetIdTest::mint_into();
             // So question is how to modify storage of another pallet?
 
             // Emit an event.
